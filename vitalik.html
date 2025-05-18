@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #3b82f6 }
+        }
+        
+        .typing-animation {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+        
+        .message-appear {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .line-by-line {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+        
+        .terminal-cursor {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        .heartbeat {
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .popup {
+            animation: popup 0.5s ease-out;
+        }
+        
+        @keyframes popup {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .heart-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .heart-btn:hover {
+            transform: scale(1.2);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            width: 500px;
+            min-height: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #9CA3AF;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-title {
+            color: #3b82f6;
+            font-weight: bold;
+            margin-bottom: 16px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .modal-body {
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .dialog-item {
+            margin-bottom: 8px;
+            padding-left: 8px;
+            border-left: 2px solid #3b82f6;
+        }
+        
+        .dialog-status {
+            color: #3b82f6;
+            margin-top: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .support-item {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .next-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            transition: background 0.3s ease;
+        }
+        
+        .next-btn:hover {
+            background: #2563eb;
+        }
+        
+        @keyframes loadProgress {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        .loading-bar {
+            animation: loadProgress 3s linear forwards;
+        }
+        
+        .heart-click {
+            font-size: 100px;
+            text-align: center;
+            margin: 50px 0;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .heart-click:hover {
+            transform: scale(1.1);
+        }
+        
+        .avatar-img {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .football-icon {
+            color: #3b82f6;
+            font-size: 24px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+    <div id="loading-screen" class="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center z-50">
+        <div class="text-center mb-8">
+            <div class="text-4xl font-mono mb-2">Birthday</div>
+            <div class="text-xs text-blue-400">v29.0.18 - Licensed for Broship</div>
+        </div>
+        
+        <div class="w-64 h-1 bg-gray-700 rounded-full mb-4 overflow-hidden">
+            <div id="loading-bar" class="h-full bg-blue-500 rounded-full loading-bar"></div>
+        </div>
+        
+        <div id="loading-text" class="text-sm font-mono text-gray-400 mb-8">
+            <div>Connecting to the bro...</div>
+        </div>
+        
+        <div class="text-xs text-gray-500">
+            <div>© 2025 BroOS Systems</div>
+            <div>All bromotions reserved</div>
+        </div>
+    </div>
+    
+    <div id="chat-container" class="hidden flex-1 flex flex-col max-w-2xl mx-auto w-full p-4">
+        <div class="flex items-center justify-between border-b border-gray-700 pb-3 mb-4">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center mr-3">
+                    <i class="fas fa-futbol text-white"></i>
+                </div>
+                <div>
+                    <div class="font-bold">Виталик</div>
+                    <div class="text-xs text-gray-400">Online <span class="w-2 h-2 bg-green-500 rounded-full inline-block ml-1"></span></div>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <button class="text-gray-400 hover:text-white">
+                    <i class="fas fa-phone"></i>
+                </button>
+                <button class="text-gray-400 hover:text-white">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button class="text-gray-400 hover:text-white">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="chat-messages" class="flex-1 overflow-y-auto space-y-4 mb-4">
+        </div>
+    </div>
+    
+    <div id="recognition-modal" class="hidden modal-overlay">
+        <div class="modal-content popup">
+            <button class="modal-close" id="close-recognition-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-title">Распознание:</div>
+            <div class="modal-body">
+                <div class="dialog-item">Объект: <span class="text-blue-300">Виталик</span></div>
+                <div class="dialog-item">Признаки:</div>
+                <div id="qualities-list" class="pl-4">
+                </div>
+                <div class="dialog-status">🤝 Статус: <span class="text-blue-300">самый лучший бро</span></div>
+                <button id="next-to-support" class="next-btn">Далее</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="support-modal" class="hidden modal-overlay">
+        <div class="modal-content popup">
+            <button class="modal-close" id="close-support-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-title">Анализ:</div>
+            <div id="support-items" class="modal-body">
+            </div>
+            <button id="next-to-heart-modal" class="next-btn">Далее</button>
+        </div>
+    </div>
+    
+    <div id="heart-modal" class="hidden modal-overlay">
+        <div class="modal-content popup">
+            <button class="modal-close" id="close-heart-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-title">готово!</div>
+            <div class="modal-body text-center">
+                <div id="click-heart" class="heart-click text-blue-500">⚽</div>
+                <div class="text-lg font-bold text-blue-300">жми)</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="congratulation-modal" class="hidden modal-overlay">
+        <div class="modal-content bg-gradient-to-r from-blue-900 to-indigo-900 popup">
+            <button id="close-congratulation-modal" class="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-title">Виталик,</div>
+            <div class="modal-body text-center">
+                <p class="mb-3">ты правда самый лучший бро.</p>
+                <p class="mb-3">Я надеюсь, что у тебя все получится в жизни и ты будешь счастлив!</p>
+                <p class="mb-3">Лучший!</p>
+                <p class="mb-4 text-blue-300 font-bold">С Днём Рождения! 🤝</p>
+                <p class="mb-4">И пусть всё, чего ты хочешь и о чем мечтаешь - сбудется!</p>
+                <p class="text-right">Твой бро</p>
+                <button id="secret-card-btn" class="px-6 py-3 bg-blue-800 text-blue-100 rounded-lg hover:bg-blue-700 transition-all shadow-lg mt-4">
+                    <i class="fas fa-gift mr-2"></i> Показать секретную открытку 🎁
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="secret-card-modal" class="hidden modal-overlay">
+        <div class="modal-content">
+            <button id="close-card-modal" class="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="text-center">
+                <h3 class="text-xl font-bold mb-4">Челси 🤝 Арсенал</h3>
+                <div id="secret-card-image" class="bg-gray-700 rounded-lg p-4 mb-4 h-64 flex items-center justify-center text-gray-400">
+                    <img src="https://assets.goal.com/images/v3/bltd98e067261eb160e/Essien_Gilberto_-_Chelsea_vs_Arsenal_2006-07.jpg?format=pjpg&auto=webp&width=3840&quality=60" alt="Chelsea" class="max-w-full max-h-full object-contain">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingText = document.getElementById('loading-text');
+            const loadingScreen = document.getElementById('loading-screen');
+            const chatContainer = document.getElementById('chat-container');
+            
+            setTimeout(() => { loadingText.innerHTML += '<div class="mt-1">Authenticating bromotions...</div>'; }, 1000);
+            setTimeout(() => { loadingText.innerHTML += '<div class="mt-1">Loading football memories...</div>'; }, 2000);
+            setTimeout(() => { loadingText.innerHTML += '<div class="mt-1 text-blue-400">Connection established 🤝</div>'; }, 3000);
+            
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                chatContainer.classList.remove('hidden');
+                startChat();
+            }, 4000);
+            
+            function startChat() {
+                const chatMessages = document.getElementById('chat-messages');
+                const recognitionModal = document.getElementById('recognition-modal');
+                const qualitiesList = document.getElementById('qualities-list');
+                const supportModal = document.getElementById('support-modal');
+                const supportItems = document.getElementById('support-items');
+                const heartModal = document.getElementById('heart-modal');
+                const congratulationModal = document.getElementById('congratulation-modal');
+                
+                document.getElementById('close-recognition-modal').addEventListener('click', () => {
+                    recognitionModal.classList.add('hidden');
+                });
+                
+                document.getElementById('close-support-modal').addEventListener('click', () => {
+                    supportModal.classList.add('hidden');
+                });
+                
+                document.getElementById('close-heart-modal').addEventListener('click', () => {
+                    heartModal.classList.add('hidden');
+                });
+                
+                document.getElementById('close-congratulation-modal').addEventListener('click', () => {
+                    congratulationModal.classList.add('hidden');
+                });
+                
+                const messages = [
+                    {
+                        sender: 'me',
+                        text: 'Челси 🤝 Арсенал брачо',
+                        time: '08.11.2022 16:33',
+                        delay: 1000
+                    },
+                    {
+                        sender: 'them',
+                        name: 'Виталик',
+                        text: 'Ессс брооо',
+                        time: '08.11.2022 16:33',
+                        delay: 1500
+                    }
+                ];
+                
+                const qualities = [
+                    'настоящий друг 🤝',
+                    'всегда поддержит 💪',
+                    'не предаст 🛡️',
+                    'готов помочь в любое время ⏱️',
+                    'весёлый 😂',
+                    'честный и открытый 🔓',
+                    'лучший в FIFA ⚽',
+                    'знает все о футболе 📊',
+                    'умеет хранить секреты 🤫',
+                    'и просто лучший💎'
+                ];
+                
+                const supportList = [
+                    'Отец Арсенала ✔️',
+                    'Мастер по забитию шедевров в FM25✔️',
+                    'Мечта всех девушек✔️',
+                    'Умный, спортивный, не пьющий, не курящий✔️',
+                ];
+                
+                let currentMessage = 0;
+                
+                function addMessage(messageObj) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('flex', 'message-appear');
+                    
+                    if (messageObj.sender === 'them') {
+                        messageDiv.classList.add('justify-start');
+                        messageDiv.innerHTML = `
+                            <div class="flex items-start max-w-xs">
+                                <img src="https://sun9-78.userapi.com/impg/Ta-jKMn_yocH4-1d_YWMMiiKIcdyuuGRSmom5g/MQnvA3GEXqU.jpg?size=1080x1299&quality=95&sign=5deb3607dbed83d4ac284f6558bff256&type=album" alt="Виталик" class="avatar-img mr-2">
+                                <div class="bg-gray-700 rounded-lg py-2 px-3">
+                                    <div class="text-xs text-blue-300">${messageObj.name || 'Виталик'}, [${messageObj.time}]</div>
+                                    <div class="mt-1">${messageObj.text}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        messageDiv.classList.add('justify-end');
+                        messageDiv.innerHTML = `
+                            <div class="flex items-start max-w-xs">
+                                <div class="bg-blue-600 rounded-lg py-2 px-3">
+                                    <div class="text-xs text-blue-100">Денис, [${messageObj.time}]</div>
+                                    <div class="mt-1">${messageObj.text}</div>
+                                </div>
+                                <img src="ava1.jpg" alt="Денис" class="avatar-img ml-2">
+                            </div>
+                        `;
+                    }
+                    
+                    chatMessages.appendChild(messageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    currentMessage++;
+                    if (currentMessage < messages.length) {
+                        setTimeout(() => {
+                            addMessage(messages[currentMessage]);
+                        }, messageObj.delay || 1500);
+                    } else {
+                        setTimeout(() => {
+                            recognitionModal.classList.remove('hidden');
+                            showQualities();
+                        }, 2500);
+                    }
+                }
+                
+                function showQualities() {
+                    let delay = 0;
+                    
+                    qualities.forEach((quality, index) => {
+                        setTimeout(() => {
+                            const qualityItem = document.createElement('div');
+                            qualityItem.classList.add('line-by-line');
+                            qualityItem.style.animationDelay = `${index * 0.2}s`;
+                            qualityItem.innerHTML = quality;
+                            qualitiesList.appendChild(qualityItem);
+                        }, delay);
+                        
+                        delay += 300;
+                    });
+                }
+                
+                function showSupportItems() {
+                    let delay = 0;
+                    
+                    supportList.forEach((item, index) => {
+                        setTimeout(() => {
+                            const supportItem = document.createElement('div');
+                            supportItem.classList.add('line-by-line', 'support-item');
+                            supportItem.style.animationDelay = `${index * 0.3}s`;
+                            supportItem.innerHTML = item;
+                            supportItems.appendChild(supportItem);
+                        }, delay);
+                        
+                        delay += 500;
+                    });
+                }
+                
+                document.getElementById('next-to-support').addEventListener('click', () => {
+                    recognitionModal.classList.add('hidden');
+                    supportModal.classList.remove('hidden');
+                    showSupportItems();
+                });
+                
+                document.getElementById('next-to-heart-modal').addEventListener('click', () => {
+                    supportModal.classList.add('hidden');
+                    heartModal.classList.remove('hidden');
+                });
+                
+                document.getElementById('click-heart').addEventListener('click', () => {
+                    heartModal.classList.add('hidden');
+                    congratulationModal.classList.remove('hidden');
+                });
+                
+                setTimeout(() => {
+                    addMessage(messages[currentMessage]);
+                }, 500);
+                
+                const secretCardBtn = document.getElementById('secret-card-btn');
+                const secretCardModal = document.getElementById('secret-card-modal');
+                const closeCardModal = document.getElementById('close-card-modal');
+                
+                secretCardBtn.addEventListener('click', function() {
+                    secretCardModal.classList.remove('hidden');
+                });
+                
+                closeCardModal.addEventListener('click', function() {
+                    secretCardModal.classList.add('hidden');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
